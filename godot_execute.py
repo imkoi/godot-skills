@@ -64,8 +64,98 @@ var scene = null
 var tree_ref = null
 var root_node = null
 
+
+func to_jsonable(value):
+    if value == null:
+        return null
+
+    var t = typeof(value)
+
+    match t:
+        TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING:
+            return value
+
+        TYPE_VECTOR2:
+            return {{
+                "x": value.x,
+                "y": value.y
+            }}
+
+        TYPE_VECTOR2I:
+            return {{
+                "x": value.x,
+                "y": value.y
+            }}
+
+        TYPE_VECTOR3:
+            return {{
+                "x": value.x,
+                "y": value.y,
+                "z": value.z
+            }}
+
+        TYPE_VECTOR3I:
+            return {{
+                "x": value.x,
+                "y": value.y,
+                "z": value.z
+            }}
+
+        TYPE_VECTOR4:
+            return {{
+                "x": value.x,
+                "y": value.y,
+                "z": value.z,
+                "w": value.w
+            }}
+
+        TYPE_VECTOR4I:
+            return {{
+                "x": value.x,
+                "y": value.y,
+                "z": value.z,
+                "w": value.w
+            }}
+
+        TYPE_COLOR:
+            return {{
+                "r": value.r,
+                "g": value.g,
+                "b": value.b,
+                "a": value.a
+            }}
+
+        TYPE_NODE_PATH:
+            return str(value)
+
+        TYPE_ARRAY:
+            var arr := []
+            for item in value:
+                arr.append(to_jsonable(item))
+            return arr
+
+        TYPE_DICTIONARY:
+            var dict := {{}}
+            for key in value.keys():
+                dict[str(key)] = to_jsonable(value[key])
+            return dict
+
+        TYPE_OBJECT:
+            if value is Node:
+                return {{
+                    "__type": "Node",
+                    "name": str(value.name),
+                    "path": str(value.get_path())
+                }}
+            return str(value)
+
+        _:
+            return str(value)
+
+
 func __user_main():
 {user_code_indented}
+
 
 func _initialize():
     tree_ref = self
@@ -73,13 +163,13 @@ func _initialize():
 
     var packed = load("{escaped_scene}")
     if packed == null:
-        push_error("Failed to load main scene: {escaped_scene}")
+        push_error("[godot_execute] Failed to load main scene: {escaped_scene}")
         quit(2)
         return
 
     scene = packed.instantiate()
     if scene == null:
-        push_error("Failed to instantiate main scene: {escaped_scene}")
+        push_error("[godot_execute] Failed to instantiate main scene: {escaped_scene}")
         quit(3)
         return
 
@@ -87,9 +177,11 @@ func _initialize():
 
     await process_frame
     await process_frame
+    await physics_frame
 
-    var result = __user_main()
-    print(JSON.stringify(result))
+    var result = await __user_main()
+    var safe_result = to_jsonable(result)
+    print(JSON.stringify(safe_result))
 
     quit(0)
 '''
