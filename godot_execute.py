@@ -1,0 +1,229 @@
+import argparse
+import os
+import re
+import subprocess
+import sys
+import time
+import uuid
+
+
+DEFAULT_GODOT_PATH = r"/home/imkoi/Documents/Godot_v4.6.1-stable_linux.x86_64"
+DEFAULT_PROJECT_PATH = r"/home/imkoi/gemini-test"
+
+
+def read_main_scene(project_path: str) -> tuple[str | None, str | None]:
+    project_file = os.path.join(project_path, "project.godot")
+    if not os.path.isfile(project_file):
+        return None, f"project.godot not found: {project_file}"
+
+    with open(project_file, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    patterns = [
+        r'application/run/main_scene\s*=\s*"(.+?)"',
+        r'run/main_scene\s*=\s*"(.+?)"',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            main_scene = match.group(1).strip()
+            if not main_scene:
+                return None, "Main scene is set in project.godot, but the value is empty."
+            return main_scene, None
+
+    return None, "Main scene is not set in project settings (project.godot)."
+
+
+def indent_code(code: str, spaces: int = 4) -> str:
+    pad = " " * spaces
+    lines = code.splitlines()
+    if not lines:
+        return pad + "return null"
+    return "\n".join(pad + line if line.strip() else "" for line in lines)
+
+
+def resolve_script_arg(script_arg: str) -> str:
+    if os.path.isfile(script_arg):
+        with open(script_arg, "r", encoding="utf-8") as f:
+            return f.read()
+    return script_arg
+
+
+def escape_gd_string(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def build_wrapper_script(main_scene_res: str, user_code: str) -> str:
+    user_code_indented = indent_code(user_code, 4)
+    escaped_scene = escape_gd_string(main_scene_res)
+
+    return f'''extends SceneTree
+
+var scene = null
+var tree_ref = null
+var root_node = null
+
+func __user_main():
+{user_code_indented}
+
+func _initialize():
+    tree_ref = self
+    root_node = get_root()
+
+    var packed = load("{escaped_scene}")
+    if packed == null:
+        push_error("Failed to load main scene: {escaped_scene}")
+        quit(2)
+        return
+
+    scene = packed.instantiate()
+    if scene == null:
+        push_error("Failed to instantiate main scene: {escaped_scene}")
+        quit(3)
+        return
+
+    root_node.add_child(scene)
+
+    await process_frame
+    await process_frame
+
+    var result = __user_main()
+    print(JSON.stringify(result))
+
+    quit(0)
+'''
+
+
+def make_temp_script(project_path: str, content: str) -> str:
+    name = f"__godot_execute_{uuid.uuid4().hex}.gd"
+    path = os.path.join(project_path, name)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(content)
+    return path
+
+
+def run_godot(godot_path: str, project_path: str, script_path: str, timeout: int) -> int:
+    if not os.path.isfile(godot_path):
+        print(f"ERROR: Godot executable not found: {godot_path}", file=sys.stderr)
+        return 10
+
+    if not os.path.isdir(project_path):
+        print(f"ERROR: Project path not found: {project_path}", file=sys.stderr)
+        return 11
+
+    if not os.path.isfile(os.path.join(project_path, "project.godot")):
+        print("ERROR: project.godot not found", file=sys.stderr)
+        return 12
+
+    cmd = [
+        godot_path,
+        "--headless",
+        "--path", project_path,
+        "--script", script_path,
+    ]
+
+    creationflags = 0
+    if os.name == "nt":
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        creationflags=creationflags,
+    )
+
+    try:
+        start = time.time()
+
+        while True:
+            if process.stdout is None:
+                break
+
+            line = process.stdout.readline()
+            if line:
+                line = line.rstrip("\n")
+
+                if line.startswith("Godot Engine v"):
+                    pass
+                elif line.startswith("[godot_execute]"):
+                    pass
+                else:
+                    print(line)
+
+            if process.poll() is not None:
+                rest = process.stdout.read()
+                if rest:
+                    for extra_line in rest.splitlines():
+                        if extra_line.startswith("Godot Engine v"):
+                            continue
+                        if extra_line.startswith("[godot_execute]"):
+                            continue
+                        print(extra_line)
+                break
+
+            if time.time() - start > timeout:
+                print(f"ERROR: Timeout after {timeout} seconds", file=sys.stderr)
+                process.kill()
+                return 13
+
+        return process.returncode or 0
+    finally:
+        if process.poll() is None:
+            process.kill()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Run inline GDScript body against the project's main scene and print returned result."
+    )
+    parser.add_argument(
+        "script",
+        help="Inline GDScript function body OR path to file with function body."
+    )
+    parser.add_argument(
+        "--godot",
+        default=DEFAULT_GODOT_PATH,
+        help=f"Path to Godot executable. Default: {DEFAULT_GODOT_PATH}"
+    )
+    parser.add_argument(
+        "--project",
+        default=DEFAULT_PROJECT_PATH,
+        help=f"Path to Godot project. Default: {DEFAULT_PROJECT_PATH}"
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=15,
+        help="Execution timeout in seconds."
+    )
+
+    args = parser.parse_args()
+
+    main_scene, main_scene_error = read_main_scene(args.project)
+    if not main_scene:
+        print(f"ERROR: {main_scene_error}", file=sys.stderr)
+        sys.exit(20)
+
+    user_code = resolve_script_arg(args.script)
+    wrapper = build_wrapper_script(main_scene, user_code)
+
+    temp_script_path = None
+    try:
+        temp_script_path = make_temp_script(args.project, wrapper)
+        exit_code = run_godot(args.godot, args.project, temp_script_path, args.timeout)
+        sys.exit(exit_code)
+    finally:
+        if temp_script_path and os.path.exists(temp_script_path):
+            try:
+                os.remove(temp_script_path)
+            except OSError:
+                pass
+
+
+if __name__ == "__main__":
+    main()
