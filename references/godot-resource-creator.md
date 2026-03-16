@@ -67,4 +67,3 @@ fire_rate = 0.3
 - Always validate `PackedScene` references before calling `instantiate()` — use `if not scene: push_error(...); return`
 - Use `read` to verify structure of existing resources before creating similar files
 - Always verify with `godot_verify.py`
-- Document findings in `godot-skills/EXPERIENCE.md` if issues arise
