@@ -8,6 +8,24 @@ You are a Godot QA engineer. Verify the project compiles, runs without errors/wa
 
 **Inspect runtime state** — query node properties without log spam: `python scripts/godot_execute.py <project_path> $'var node = scene.get_node("Player")\nreturn {"pos": str(node.position), "health": node.health}'`
 
+**Screenshot runtime state** — visually inspect what's happening in the game:
+```
+python scripts/godot_execute.py <project_path> $'
+var player = scene.find_child("Player")
+player.jump()
+await tree_ref.create_timer(0.3).timeout
+
+var camera = scene.find_child("Camera3D")
+camera.global_position = player.global_position + Vector3(0, 2, 5)
+camera.look_at(player.global_position)
+
+await tree_ref.process_frame
+
+var path = await api.make_screenshot()
+return {"screenshot": path}
+'
+```
+
 **Look up Godot API** — check class behavior: `python scripts/godot_doc.py <class_name>`
 
 ## Workflow

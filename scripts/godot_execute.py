@@ -84,9 +84,25 @@ def build_wrapper_script(main_scene_res: str, user_code: str) -> str:
 
     return f'''extends SceneTree
 
+
+class ExecuteAPI:
+    var _tree: SceneTree
+
+    func _init(p_tree: SceneTree) -> void:
+        _tree = p_tree
+
+    func make_screenshot() -> String:
+        await RenderingServer.frame_post_draw
+        var image: Image = _tree.get_root().get_texture().get_image()
+        var path: String = OS.get_temp_dir() + "/godot_screenshot_" + str(Time.get_ticks_msec()) + ".png"
+        image.save_png(path)
+        return path
+
+
 var scene = null
 var tree_ref = null
 var root_node = null
+var api: ExecuteAPI = null
 
 
 func to_jsonable(value):
@@ -184,6 +200,7 @@ func __user_main():
 func _initialize():
     tree_ref = self
     root_node = get_root()
+    api = ExecuteAPI.new(self)
 
     var packed = load("{escaped_scene}")
     if packed == null:
