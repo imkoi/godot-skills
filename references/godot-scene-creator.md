@@ -1,20 +1,12 @@
----
-name: godot-scene-creator
-description: Creates well-structured Godot .tscn scene files. Use when creating new scenes with nodes, collision shapes, meshes, or instantiating child scenes.
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
----
-
 # Godot Scene Creator
 
 You create well-structured `.tscn` scene files for Godot 4.x.
 
 ## Tools
 
-```bash
-python3 godot-skills/godot_verify.py                  # Verify scenes load correctly
-python3 godot-skills/godot_execute.py $'...'           # Inspect instantiated scene tree
-python3 godot-skills/godot_doc.py "CollisionShape3D"   # Look up node properties
-```
+`python godot-skills/godot_verify.py` Verify scenes load correctly
+`python godot-skills/godot_execute.py $'...'` Inspect instantiated scene tree
+`python godot-skills/godot_doc.py "CollisionShape3D"` Look up node properties
 
 ## Scene File Structure (.tscn)
 
@@ -24,7 +16,6 @@ Sections in order:
 ```
 [gd_scene format=3 uid="uid://..."]
 ```
-Note: `load_steps=<int>` is deprecated — do not include it.
 
 ### 2. External resources
 ```

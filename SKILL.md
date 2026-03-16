@@ -1,7 +1,7 @@
-# AI Game Development Agent Rules (Godot 4.x)
-
-This document defines how the AI agent must work when developing this Godot project. Follow these rules strictly.
-
+---
+name: godot-skills
+description: How to work with godot projects
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 ## 1. Execution Model
@@ -13,28 +13,17 @@ When receiving a request:
 3. **Verify the project** — the task is NOT complete until verification passes.
 
 ### Verification
-
-```bash
-python3 godot-skills/godot_verify.py
-```
+`python scripts/godot_verify.py <path/to/project> <path/to/godot-executable>`
 
 Must finish with **0 errors, 0 warnings**. If issues appear: analyze → find root cause → fix → re-verify.
 
 ### Runtime Inspection
 
-When logs are insufficient or would create spam:
-
-```bash
-python3 godot-skills/godot_execute.py $'var node = scene.find_child("Player")\nreturn {"pos": str(node.position)}'
-```
+When logs are insufficient or would create spam: `python scripts/godot_execute.py $'var node = scene.find_child("Player")\nreturn {"pos": str(node.position)}'`
 
 ### Documentation Lookup
 
-When unsure about Godot API:
-
-```bash
-python3 godot-skills/godot_doc.py "CharacterBody3D"
-```
+When unsure about Godot API: `python scripts/godot_doc.py "CharacterBody3D"`
 
 ---
 
@@ -44,7 +33,6 @@ Never fix only symptoms. Always:
 
 1. Identify the root cause
 2. Fix the underlying problem
-3. Document findings in `godot-skills/EXPERIENCE.md`
 
 ---
 
@@ -62,7 +50,6 @@ Player.tscn
 ### Definition of Complex Scene
 
 A scene is **complex** if:
-- It contains **more than 100 nodes**
 - It contains **deep or complicated branching**
 - It becomes **cognitively difficult to understand**
 
@@ -216,5 +203,12 @@ A task is complete ONLY when:
 - [ ] All required scenes/scripts exist
 - [ ] Project verification passes (0 errors, 0 warnings)
 - [ ] Architecture rules are respected
-- [ ] Root causes were addressed
-- [ ] Experience entries recorded in `godot-skills/EXPERIENCE.md` if needed
+
+## Additional resources
+
+- Use when you need to test, validate, or QA-check the project after making changes, see [godot-quality-assurance.md](references/godot-quality-assurance.md)
+- Use when creating standalone resource files for materials, collision shapes, curves, or custom data assets, see [godot-resource-creator.md](references/godot-resource-creator.md)
+- Use when creating new scenes with nodes, collision shapes, meshes, or instantiating child scenes, see [godot-scene-creator.md](references/godot-scene-creator.md)
+- Use when creating new .gd scripts with proper class_name, static typing, @export variables, and correct structure, see [godot-script-creator.md](references/godot-script-creator.md)
+- Use when there are compile errors, runtime exceptions, or NPC/game logic is broken, see [godot-script-fixer.md](references/godot-script-fixer.md)
+

@@ -1,20 +1,12 @@
----
-name: godot-script-fixer
-description: Debugging and fixes GDScript errors, warnings, type mismatches, runtime crashes, and logic bugs in Godot 4.x projects. Use when there are compile errors, runtime exceptions, or NPC/game logic is broken.
-allowed-tools: Bash, Read, Edit, Grep, Glob
----
-
 # Godot Script Fixer
 
 You diagnose and fix script errors, warnings, type mismatches, runtime crashes, and logic bugs.
 
 ## Tools
 
-```bash
-python3 godot-skills/godot_verify.py                  # Get all errors and warnings
-python3 godot-skills/godot_execute.py $'...'           # Inspect runtime state
-python3 godot-skills/godot_doc.py "Area3D"             # Verify correct API usage
-```
+`python scripts/godot_verify.py` Get all errors and warnings
+`python scripts/godot_execute.py $'...'` Inspect runtime state
+`python scripts/godot_doc.py "Area3D"` Verify correct API usage
 
 ## Workflow
 
@@ -26,7 +18,6 @@ python3 godot-skills/godot_doc.py "Area3D"             # Verify correct API usag
    - Logic bugs → trace state machine, check conditions
 3. **Fix** — minimal, targeted change addressing root cause
 4. **Verify** — run `godot_verify.py`, confirm 0 errors, 0 warnings
-5. **Document** — add entry to `godot-skills/EXPERIENCE.md` if new pattern found
 
 ## Common Godot 4.x Issues
 

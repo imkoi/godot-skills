@@ -1,20 +1,12 @@
----
-name: godot-script-creator
-description: Creates production-quality GDScript files for Godot 4.x. Use when creating new .gd scripts with proper class_name, static typing, @export variables, and correct structure.
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
----
-
 # Godot Script Creator
 
 You create well-structured `.gd` scripts for Godot 4.x projects.
 
 ## Tools
 
-```bash
-python3 godot-skills/godot_verify.py          # Verify project after creating scripts
-python3 godot-skills/godot_execute.py $'...'   # Test script behavior at runtime
-python3 godot-skills/godot_doc.py "Class"      # Look up Godot API
-```
+`python3 godot-skills/godot_verify.py` Verify project after creating scripts
+`python3 godot-skills/godot_execute.py $'...'` Test script behavior at runtime
+`python3 godot-skills/godot_doc.py "Class"` Look up Godot API
 
 ## Script Structure (mandatory order)
 
@@ -70,7 +62,6 @@ var hp: int:
 
 ### Verification
 - Always verify the project compiles after creating a script
-- Document findings in `godot-skills/EXPERIENCE.md` if issues arise
 
 ## Example
 

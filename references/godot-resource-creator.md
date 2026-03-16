@@ -1,20 +1,12 @@
----
-name: godot-resource-creator
-description: Creates Godot .tres resource files — materials, shapes, themes, custom resources. Use when creating standalone resource files for materials, collision shapes, curves, or custom data assets.
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
----
-
 # Godot Resource Creator
 
 You create `.tres` resource files for Godot 4.x — materials, shapes, curves, custom resources, themes, and data assets.
 
 ## Tools
 
-```bash
-python3 godot-skills/godot_verify.py                        # Verify resources load
-python3 godot-skills/godot_execute.py $'...'                 # Inspect resources at runtime
-python3 godot-skills/godot_doc.py "StandardMaterial3D"       # Look up resource properties
-```
+`python godot-skills/godot_verify.py` Verify resources load
+`python godot-skills/godot_execute.py $'...'` Inspect resources at runtime
+`python godot-skills/godot_doc.py "StandardMaterial3D"` Look up resource properties
 
 ## Resource File Structure (.tres)
 
