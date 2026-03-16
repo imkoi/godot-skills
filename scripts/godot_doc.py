@@ -7,7 +7,31 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 
-DEFAULT_GODOT_PATH = r"/home/imkoi/Documents/Godot_v4.6.1-stable_linux.x86_64"
+def find_godot() -> str:
+    from_env = os.environ.get("GODOT_PATH")
+    if from_env and os.path.isfile(from_env):
+        return from_env
+
+    for name in ["godot4", "godot", "Godot"]:
+        found = shutil.which(name)
+        if found:
+            return found
+
+    pattern = re.compile(r'(?:^|[;:])([^;:]*?[/\\](?:[Gg]odot)[^;:/\\]*)', re.IGNORECASE)
+    candidates: list[str] = []
+    for value in os.environ.values():
+        for match in pattern.finditer(value):
+            path = match.group(1).strip()
+            if os.path.isfile(path):
+                candidates.append(path)
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    raise FileNotFoundError(
+        "Godot not found. Set GODOT_PATH env var or add godot to PATH."
+        + (f" (found multiple candidates: {candidates})" if len(candidates) > 1 else "")
+    )
 
 
 def run_doctool(godot_path: str, output_dir: str) -> int:
@@ -162,14 +186,16 @@ def print_class_doc(xml_path: str) -> int:
 
 
 def main():
+    gd_path = find_godot()
+
     parser = argparse.ArgumentParser(
         description="Get Godot built-in class documentation for a specific type."
     )
     parser.add_argument("class_name", help='Class name, for example: "Node2D"')
     parser.add_argument(
         "--godot",
-        default=DEFAULT_GODOT_PATH,
-        help=f"Path to Godot executable. Default: {DEFAULT_GODOT_PATH}"
+        default=gd_path,
+        help=f"Path to Godot executable. Default: {gd_path}"
     )
     args = parser.parse_args()
 

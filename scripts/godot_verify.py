@@ -3,15 +3,38 @@ import os
 import time
 import re
 import signal
+import shutil
 
-# путь к Godot
-GODOT_PATH = r"/home/imkoi/Documents/Godot_v4.6.1-stable_linux.x86_64"
 
-# путь к проекту
 PROJECT_PATH = r"/home/imkoi/gemini-test"
+GAME_RUN_TIME = 1
 
-# сколько секунд запускать игру после появления строки Godot Engine v...
-GAME_RUN_TIME = 2
+
+def find_godot() -> str:
+    from_env = os.environ.get("GODOT_PATH")
+    if from_env and os.path.isfile(from_env):
+        return from_env
+
+    for name in ["godot4", "godot", "Godot"]:
+        found = shutil.which(name)
+        if found:
+            return found
+
+    pattern = re.compile(r'(?:^|[;:])([^;:]*?[/\\](?:[Gg]odot)[^;:/\\]*)', re.IGNORECASE)
+    candidates: list[str] = []
+    for value in os.environ.values():
+        for match in pattern.finditer(value):
+            path = match.group(1).strip()
+            if os.path.isfile(path):
+                candidates.append(path)
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    raise FileNotFoundError(
+        "Godot not found. Set GODOT_PATH env var or add godot to PATH."
+        + (f" (found multiple candidates: {candidates})" if len(candidates) > 1 else "")
+    )
 
 
 def find_scenes(project_path):
@@ -40,9 +63,9 @@ def extract_warnings_and_errors(output: str):
     return errors, warnings, lines
 
 
-def open_scene(scene_path):
+def open_scene(scene_path, godot_path):
     cmd = [
-        GODOT_PATH,
+        godot_path,
         "--headless",
         "--path", PROJECT_PATH,
         "--quit",
@@ -105,9 +128,9 @@ def kill_process_tree(process):
                 pass
 
 
-def run_main_scene(scene_path):
+def run_main_scene(scene_path, godot_path):
     cmd = [
-        GODOT_PATH,
+        godot_path,
         "--path", PROJECT_PATH,
         scene_path
     ]
@@ -166,8 +189,10 @@ def run_main_scene(scene_path):
 
 
 def main():
-    if not os.path.isfile(GODOT_PATH):
-        print(f"ERROR: Godot executable not found: {GODOT_PATH}")
+    gd_script = find_godot()
+
+    if not os.path.isfile(gd_script):
+        print(f"ERROR: Godot executable not found: {gd_script}")
         return
 
     if not os.path.isdir(PROJECT_PATH):
@@ -182,14 +207,14 @@ def main():
     print(f"Scanning project with {len(scenes)} scenes...")
 
     for scene in scenes:
-        errors, warnings, logs = open_scene(scene)
+        errors, warnings, logs = open_scene(scene, gd_script)
         total_errors += errors
         total_warnings += warnings
         all_logs.extend(logs)
 
     main_scene = find_main_scene()
     if main_scene:
-        errors, warnings, logs = run_main_scene(main_scene)
+        errors, warnings, logs = run_main_scene(main_scene, gd_script)
         total_errors += errors
         total_warnings += warnings
         all_logs.extend(logs)
