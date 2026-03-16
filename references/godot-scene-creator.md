@@ -59,4 +59,3 @@ shape = SubResource("BoxShape3D_abc")
 - Never build complex geometry from code — save to `.tscn`
 - Split complex scenes (>100 nodes or deep branching) into sub-scenes
 - Always verify with `godot_verify.py`
-- Document findings in `godot-skills/EXPERIENCE.md` if issues arise
