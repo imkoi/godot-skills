@@ -8,9 +8,6 @@ import uuid
 import shutil
 
 
-DEFAULT_PROJECT_PATH = r"/home/imkoi/gemini-test"
-
-
 def find_godot() -> str:
     from_env = os.environ.get("GODOT_PATH")
     if from_env and os.path.isfile(from_env):
@@ -303,6 +300,10 @@ def main():
         description="Run inline GDScript body against the project's main scene and print returned result."
     )
     parser.add_argument(
+        "project",
+        help="Path to Godot project directory."
+    )
+    parser.add_argument(
         "script",
         help="Inline GDScript function body OR path to file with function body."
     )
@@ -310,11 +311,6 @@ def main():
         "--godot",
         default=gd_path,
         help=f"Path to Godot executable. Default: {gd_path}"
-    )
-    parser.add_argument(
-        "--project",
-        default=DEFAULT_PROJECT_PATH,
-        help=f"Path to Godot project. Default: {DEFAULT_PROJECT_PATH}"
     )
     parser.add_argument(
         "--timeout",

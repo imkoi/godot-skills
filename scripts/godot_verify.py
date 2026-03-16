@@ -1,12 +1,12 @@
-import subprocess
+import argparse
 import os
-import time
 import re
 import signal
 import shutil
+import subprocess
+import time
 
 
-PROJECT_PATH = r"/home/imkoi/gemini-test"
 GAME_RUN_TIME = 1
 
 
@@ -63,11 +63,11 @@ def extract_warnings_and_errors(output: str):
     return errors, warnings, lines
 
 
-def open_scene(scene_path, godot_path):
+def open_scene(scene_path, godot_path, project_path):
     cmd = [
         godot_path,
         "--headless",
-        "--path", PROJECT_PATH,
+        "--path", project_path,
         "--quit",
         scene_path
     ]
@@ -84,8 +84,8 @@ def open_scene(scene_path, godot_path):
     return extract_warnings_and_errors(process.stdout)
 
 
-def find_main_scene():
-    project_file = os.path.join(PROJECT_PATH, "project.godot")
+def find_main_scene(project_path):
+    project_file = os.path.join(project_path, "project.godot")
 
     if not os.path.exists(project_file):
         return None
@@ -102,7 +102,7 @@ def find_main_scene():
         match = re.search(pattern, text)
         if match:
             scene = match.group(1).replace("res://", "")
-            return os.path.join(PROJECT_PATH, scene)
+            return os.path.join(project_path, scene)
 
     return None
 
@@ -128,10 +128,10 @@ def kill_process_tree(process):
                 pass
 
 
-def run_main_scene(scene_path, godot_path):
+def run_main_scene(scene_path, godot_path, project_path):
     cmd = [
         godot_path,
-        "--path", PROJECT_PATH,
+        "--path", project_path,
         scene_path
     ]
 
@@ -189,17 +189,34 @@ def run_main_scene(scene_path, godot_path):
 
 
 def main():
-    gd_script = find_godot()
+    gd_path = find_godot()
+
+    parser = argparse.ArgumentParser(
+        description="Verify a Godot project by opening every scene and running the main scene."
+    )
+    parser.add_argument(
+        "project",
+        help="Path to the Godot project directory."
+    )
+    parser.add_argument(
+        "--godot",
+        default=gd_path,
+        help=f"Path to Godot executable. Default: {gd_path}"
+    )
+    args = parser.parse_args()
+
+    project_path = args.project
+    gd_script = args.godot
 
     if not os.path.isfile(gd_script):
         print(f"ERROR: Godot executable not found: {gd_script}")
         return
 
-    if not os.path.isdir(PROJECT_PATH):
-        print(f"ERROR: Project path not found: {PROJECT_PATH}")
+    if not os.path.isdir(project_path):
+        print(f"ERROR: Project path not found: {project_path}")
         return
 
-    scenes = find_scenes(PROJECT_PATH)
+    scenes = find_scenes(project_path)
     total_errors = 0
     total_warnings = 0
     all_logs = []
@@ -207,14 +224,14 @@ def main():
     print(f"Scanning project with {len(scenes)} scenes...")
 
     for scene in scenes:
-        errors, warnings, logs = open_scene(scene, gd_script)
+        errors, warnings, logs = open_scene(scene, gd_script, project_path)
         total_errors += errors
         total_warnings += warnings
         all_logs.extend(logs)
 
-    main_scene = find_main_scene()
+    main_scene = find_main_scene(project_path)
     if main_scene:
-        errors, warnings, logs = run_main_scene(main_scene, gd_script)
+        errors, warnings, logs = run_main_scene(main_scene, gd_script, project_path)
         total_errors += errors
         total_warnings += warnings
         all_logs.extend(logs)
