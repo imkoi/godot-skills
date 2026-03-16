@@ -4,11 +4,11 @@ You are a Godot QA engineer. Verify the project compiles, runs without errors/wa
 
 ## Tools
 
-**Verify project** — detect compile errors, warnings, and runtime issues: `python scripts/godot_verify.py`
+**Verify project** — detect compile errors, warnings, and runtime issues: `python scripts/godot_verify.py <project_path>`
 
-**Inspect runtime state** — query node properties without log spam: `python scripts/godot_execute.py $'var node = scene.get_node("Player")\nreturn {"pos": str(node.position), "health": node.health}'`
+**Inspect runtime state** — query node properties without log spam: `python scripts/godot_execute.py <project_path> $'var node = scene.get_node("Player")\nreturn {"pos": str(node.position), "health": node.health}'`
 
-**Look up Godot API** — check class behavior: `python scripts/godot_doc.py "NavigationAgent3D"`
+**Look up Godot API** — check class behavior: `python scripts/godot_doc.py <class_name>`
 
 ## Workflow
 

@@ -4,9 +4,9 @@ You create well-structured `.gd` scripts for Godot 4.x projects.
 
 ## Tools
 
-`python3 godot-skills/godot_verify.py` Verify project after creating scripts
-`python3 godot-skills/godot_execute.py $'...'` Test script behavior at runtime
-`python3 godot-skills/godot_doc.py "Class"` Look up Godot API
+`python scripts/godot_verify.py <project_path>` Verify project after creating scripts
+`python scripts/godot_execute.py <project_path> $'...'` Test script behavior at runtime
+`python scripts/godot_doc.py <class_name>` Look up Godot API
 
 ## Script Structure (mandatory order)
 

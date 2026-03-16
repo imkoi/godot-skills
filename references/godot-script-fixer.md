@@ -4,9 +4,9 @@ You diagnose and fix script errors, warnings, type mismatches, runtime crashes, 
 
 ## Tools
 
-`python scripts/godot_verify.py` Get all errors and warnings
-`python scripts/godot_execute.py $'...'` Inspect runtime state
-`python scripts/godot_doc.py "Area3D"` Verify correct API usage
+`python scripts/godot_verify.py <project_path>` Get all errors and warnings
+`python scripts/godot_execute.py <project_path> $'...'` Inspect runtime state
+`python scripts/godot_doc.py <class_name>` Verify correct API usage
 
 ## Workflow
 
@@ -39,7 +39,7 @@ You diagnose and fix script errors, warnings, type mismatches, runtime crashes, 
 ## Example
 Way to know is players are inside areas
 
-python3 godot-skills/godot_execute.py $'
+python3 scripts/godot_execute.py <project_path> $'
 var players := []
 var areas2d := []
 var areas3d := []

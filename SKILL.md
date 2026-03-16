@@ -13,17 +13,17 @@ When receiving a request:
 3. **Verify the project** — the task is NOT complete until verification passes.
 
 ### Verification
-`python scripts/godot_verify.py <path/to/project> <path/to/godot-executable>`
+`python scripts/godot_verify.py <project_path>`
 
 Must finish with **0 errors, 0 warnings**. If issues appear: analyze → find root cause → fix → re-verify.
 
 ### Runtime Inspection
 
-When logs are insufficient or would create spam: `python scripts/godot_execute.py $'var node = scene.find_child("Player")\nreturn {"pos": str(node.position)}'`
+When logs are insufficient or would create spam: `python scripts/godot_execute.py <project_path> $'var node = scene.find_child("Player")\nreturn {"pos": str(node.position)}'`
 
 ### Documentation Lookup
 
-When unsure about Godot API: `python scripts/godot_doc.py "CharacterBody3D"`
+When unsure about Godot API: `python scripts/godot_doc.py <class_name>`
 
 ---
 

@@ -4,9 +4,9 @@ You create `.tres` resource files for Godot 4.x — materials, shapes, curves, c
 
 ## Tools
 
-`python godot-skills/godot_verify.py` Verify resources load
-`python godot-skills/godot_execute.py $'...'` Inspect resources at runtime
-`python godot-skills/godot_doc.py "StandardMaterial3D"` Look up resource properties
+`python scripts/godot_verify.py <project_path>` Verify resources load
+`python scripts/godot_execute.py <project_path> $'...'` Inspect resources at runtime
+`python scripts/godot_doc.py <class_name>` Look up resource properties
 
 ## Resource File Structure (.tres)
 

@@ -4,9 +4,9 @@ You create well-structured `.tscn` scene files for Godot 4.x.
 
 ## Tools
 
-`python godot-skills/godot_verify.py` Verify scenes load correctly
-`python godot-skills/godot_execute.py $'...'` Inspect instantiated scene tree
-`python godot-skills/godot_doc.py "CollisionShape3D"` Look up node properties
+`python scripts/godot_verify.py <project_path>` Verify scenes load correctly
+`python scripts/godot_execute.py <project_path> $'...'` Inspect instantiated scene tree
+`python scripts/godot_doc.py <class_name>` Look up node properties
 
 ## Scene File Structure (.tscn)
 
