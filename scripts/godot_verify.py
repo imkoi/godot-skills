@@ -1,10 +1,8 @@
 import argparse
 import os
 import re
-import signal
 import shutil
 import subprocess
-import time
 
 
 GAME_RUN_TIME = 1
@@ -107,85 +105,27 @@ def find_main_scene(project_path):
     return None
 
 
-def kill_process_tree(process):
-    try:
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-    except Exception:
-        try:
-            process.terminate()
-        except Exception:
-            pass
-
-    try:
-        process.wait(timeout=2)
-    except subprocess.TimeoutExpired:
-        try:
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-        except Exception:
-            try:
-                process.kill()
-            except Exception:
-                pass
-
 
 def run_main_scene(scene_path, godot_path, project_path):
     cmd = [
         godot_path,
+        "--headless",
+        "--quit-after", str(GAME_RUN_TIME),
         "--path", project_path,
         scene_path
     ]
 
-    process = subprocess.Popen(
+    process = subprocess.run(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
         encoding="utf-8",
         errors="replace",
-        preexec_fn=os.setsid
+        timeout=GAME_RUN_TIME + 10
     )
 
-    collected_lines = []
-    start_time = None
-
-    try:
-        while True:
-            if process.stdout is None:
-                break
-
-            line = process.stdout.readline()
-
-            if line:
-                stripped = line.rstrip("\n")
-                collected_lines.append(stripped)
-
-                if start_time is None and stripped.startswith("Godot Engine v"):
-                    start_time = time.time()
-
-            if process.poll() is not None:
-                rest = process.stdout.read() if process.stdout else ""
-                if rest:
-                    collected_lines.extend(rest.splitlines())
-                break
-
-            if start_time is not None and (time.time() - start_time) >= GAME_RUN_TIME:
-                break
-
-        kill_process_tree(process)
-
-        if process.stdout is not None:
-            try:
-                rest = process.stdout.read()
-                if rest:
-                    collected_lines.extend(rest.splitlines())
-            except Exception:
-                pass
-
-    finally:
-        if process.poll() is None:
-            kill_process_tree(process)
-
-    return extract_warnings_and_errors("\n".join(collected_lines))
+    return extract_warnings_and_errors(process.stdout)
 
 
 def main():
