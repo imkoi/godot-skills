@@ -27,6 +27,8 @@ You create well-structured `.gd` scripts for Godot 4.x projects.
 - Maximum 300 lines per script — split into multiple scripts if needed
 - Maximum 50 lines per function — refactor into smaller functions if needed
 
+If script exceeds 300 lines then create more child nodes with scripts that will be referenced in initial script
+
 ### Architecture
 - One File = One Class — each `.gd` file defines exactly one class
 - Every script MUST have `class_name` and `extends`
