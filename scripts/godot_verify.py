@@ -35,6 +35,49 @@ def find_godot() -> str:
     )
 
 
+def find_gd_files(project_path):
+    gd_files = []
+    for root, dirs, files in os.walk(project_path):
+        for f in files:
+            if f.endswith(".gd"):
+                gd_files.append(os.path.join(root, f))
+    return gd_files
+
+
+def check_file_length(gd_files, max_lines=300):
+    violations = []
+    for path in gd_files:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+        if len(lines) > max_lines:
+            violations.append((path, len(lines)))
+    return violations
+
+
+def check_method_length(gd_files, max_lines=50):
+    violations = []
+    func_re = re.compile(r'^func\s+(\w+)')
+    for path in gd_files:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+        current_func = None
+        func_start = 0
+        for i, line in enumerate(lines):
+            m = func_re.match(line)
+            if m:
+                if current_func is not None:
+                    length = i - func_start
+                    if length > max_lines:
+                        violations.append((path, current_func, length))
+                current_func = m.group(1)
+                func_start = i
+        if current_func is not None:
+            length = len(lines) - func_start
+            if length > max_lines:
+                violations.append((path, current_func, length))
+    return violations
+
+
 def find_scenes(project_path):
     scenes = []
     for root, dirs, files in os.walk(project_path):
@@ -154,6 +197,30 @@ def main():
 
     if not os.path.isdir(project_path):
         print(f"ERROR: Project path not found: {project_path}")
+        return
+
+    # Hard gates: .gd file length and method length
+    gd_files = find_gd_files(project_path)
+    hard_gate_failed = False
+
+    file_violations = check_file_length(gd_files, max_lines=300)
+    if file_violations:
+        hard_gate_failed = True
+        print("HARD GATE FAILED: .gd files exceeding 300 lines:")
+        for path, count in file_violations:
+            rel = os.path.relpath(path, project_path)
+            print(f"  {rel}: {count} lines")
+
+    method_violations = check_method_length(gd_files, max_lines=50)
+    if method_violations:
+        hard_gate_failed = True
+        print("HARD GATE FAILED: methods exceeding 50 lines:")
+        for path, func_name, count in method_violations:
+            rel = os.path.relpath(path, project_path)
+            print(f"  {rel}::{func_name}: {count} lines")
+
+    if hard_gate_failed:
+        print("ERROR: Hard gate checks failed. Fix the issues above before proceeding.")
         return
 
     scenes = find_scenes(project_path)
